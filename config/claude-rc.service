@@ -1,0 +1,26 @@
+# Claude Code Remote Control 서버를 재부팅 후에도 자동으로 띄우는 systemd "사용자" 서비스 (선택)
+# 실제 실행은 scripts/claude-rc.sh 가 tmux 안에서 하므로, 언제든 `./scripts/claude-rc.sh attach` 로 화면을 볼 수 있다.
+#
+# 설치 (각자 자기 계정, sudo 불필요):
+#   mkdir -p ~/.config/systemd/user
+#   cp ~/jetson_orin/config/claude-rc.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now claude-rc
+# 로그아웃·재부팅 후에도 돌게 하려면 관리자가 한 번 (팀 합의 후):
+#   sudo loginctl enable-linger <리눅스아이디>
+# 저장소를 ~/jetson_orin 이 아닌 곳에 clone 했다면 아래 두 경로를 고친다.
+
+[Unit]
+Description=Claude Code Remote Control (tmux: claude-rc)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/jetson_orin/scripts/claude-rc.sh start --detach
+ExecStop=%h/jetson_orin/scripts/claude-rc.sh stop
+
+[Install]
+WantedBy=default.target
