@@ -38,6 +38,14 @@ usage() { sed -n '2,/^set -euo/p' "$0" | sed '$d; s/^# \{0,1\}//'; exit "${1:-0}
 
 running() { tmux has-session -t "=$SESSION" 2>/dev/null; }
 
+# 이미 tmux 안이면 중첩 attach 대신 서버 세션으로 화면을 전환한다
+show() {
+  if [[ -n ${TMUX:-} ]]; then
+    exec tmux switch-client -t "=$SESSION"
+  fi
+  exec tmux attach -t "=$SESSION"
+}
+
 find_claude() {
   command -v claude 2>/dev/null && return
   [[ -x $HOME/.local/bin/claude ]] && { echo "$HOME/.local/bin/claude"; return; }
@@ -74,9 +82,9 @@ done"
     ok "시작했습니다: $RC_NAME  (폴더 $DIR, spawn=$RC_SPAWN, 최대 $RC_CAPACITY 세션)"
   fi
 
-  if [[ $DETACH -eq 0 && -t 0 && -t 1 && -z ${TMUX:-} ]]; then
+  if [[ $DETACH -eq 0 && -t 0 && -t 1 ]]; then
     log "서버 화면에 붙습니다. 처음이면 'Trust …?' / 'Enable Remote Control?' 에 y. 빠져나오기: Ctrl-b d"
-    exec tmux attach -t "=$SESSION"
+    show
   fi
   log "화면 보기: $0 attach   상태: $0 status"
 }
@@ -114,7 +122,7 @@ done
 
 case $sub in
   start) cmd_start ;;
-  attach) running || die "실행 중이 아닙니다. 시작: $0 start"; exec tmux attach -t "=$SESSION" ;;
+  attach) running || die "실행 중이 아닙니다. 시작: $0 start"; show ;;
   status) cmd_status ;;
   stop) cmd_stop ;;
   -h|--help|help) usage 0 ;;
