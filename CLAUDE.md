@@ -3,11 +3,12 @@
 이 저장소는 팀이 **원격으로 공유하는 NVIDIA Jetson Orin 한 대**에서 개발하는 프로젝트다.
 Claude Code 는 팀원 각자의 계정·세션으로 Jetson 위(또는 각자 맥)에서 실행된다.
 
-## 장비 정보 (첫 세팅 후 `./scripts/healthcheck.sh` 결과로 채울 것)
+## 장비 정보 (2026-10-19 `./scripts/healthcheck.sh` 기준)
 
-- 모델: `<예: Jetson AGX Orin 64GB / Orin Nano 8GB>`
-- JetPack / L4T: `<예: JetPack 6.2.x / R36.x>` — Ubuntu `<22.04>`
-- CUDA: `/usr/local/cuda` (`nvcc --version`), TensorRT: `/usr/src/tensorrt`
+- 모델: **Jetson Orin Nano Engineering Reference Developer Kit Super** — RAM 8GB(CPU·GPU 공유), NVMe 233GB
+- L4T: **R39.2.1** — Ubuntu **24.04.4**, 커널 6.8.12-tegra, Python 3.12, 전력 모드 25W
+- CUDA / cuDNN / TensorRT: **아직 미설치** (`nvidia-jetpack` 메타패키지 없음, `/usr/local/cuda` 없음) — 설치 전에는 GPU 작업 불가
+- 스왑: 0B (zram 꺼짐) → 큰 작업 전 `free -h` 필수
 - 아키텍처: **aarch64(ARM64)**. x86 전용 바이너리/휠은 동작하지 않는다.
 
 ## 이 장비에서 반드시 지킬 것
