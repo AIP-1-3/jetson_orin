@@ -1,0 +1,46 @@
+// Tailscale 관리 콘솔 → Access controls 에 붙여넣는 팀용 정책 예시
+// https://login.tailscale.com/admin/acls
+//
+// 목적:
+//  1) 팀원은 Jetson(tag:jetson)에만 접근 — 기본 정책(전부 허용)으로 두면 팀원이 서로의 맥/PC 까지 접근 가능
+//  2) Jetson 에 태그를 붙이면 노드 키 만료(기본 180일)가 꺼져, 어느 날 갑자기 원격 접속이 끊기는 일을 막는다
+//
+// 적용 순서: 이 정책 저장 → 관리 콘솔 Machines → Jetson 의 ⋯ 메뉴 → Edit ACL tags → tag:jetson
+// <> 부분은 실제 팀원 이메일(Tailscale 로그인 계정)로 바꾸세요. tests 의 이메일도 실제 팀원으로 바꿔야 저장됩니다.
+{
+  "groups": {
+    "group:team": [
+      "<관리자@example.com>",
+      "<팀원1@example.com>",
+      "<팀원2@example.com>",
+    ],
+  },
+
+  "tagOwners": {
+    "tag:jetson": ["autogroup:admin"],
+  },
+
+  "grants": [
+    // 팀원 → Jetson: SSH, 원격 데스크톱(RDP), 개발용 웹 포트(Jupyter/데모 서버 등)
+    {
+      "src": ["group:team"],
+      "dst": ["tag:jetson"],
+      "ip":  ["tcp:22", "tcp:3389", "tcp:8000-8999"],
+    },
+    // 각자 본인 기기끼리는 자유롭게 (내 맥 ↔ 내 아이패드 등)
+    {
+      "src": ["autogroup:member"],
+      "dst": ["autogroup:self"],
+      "ip":  ["*"],
+    },
+  ],
+
+  // 정책이 의도대로 동작하는지 저장 시점에 자동 검사
+  "tests": [
+    {
+      "src":    "<팀원1@example.com>",
+      "accept": ["tag:jetson:22", "tag:jetson:3389"],
+      "deny":   ["tag:jetson:5432"],
+    },
+  ],
+}

@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./scripts/healthcheck.sh)",
+      "Bash(./scripts/gpu-run.sh --status)",
+      "Bash(tegrastats:*)",
+      "Bash(free:*)",
+      "Bash(df:*)",
+      "Bash(nvcc --version)"
+    ],
+    "deny": [
+      "Bash(sudo reboot:*)",
+      "Bash(sudo shutdown:*)",
+      "Bash(sudo poweroff:*)",
+      "Bash(sudo nvpmodel:*)",
+      "Bash(sudo jetson_clocks:*)",
+      "Bash(sudo systemctl restart docker:*)",
+      "Bash(sudo apt upgrade:*)",
+      "Bash(sudo apt full-upgrade:*)",
+      "Bash(sudo apt-get upgrade:*)",
+      "Bash(sudo apt-get dist-upgrade:*)",
+      "Bash(do-release-upgrade:*)",
+      "Bash(sudo do-release-upgrade:*)"
+    ]
+  }
+}

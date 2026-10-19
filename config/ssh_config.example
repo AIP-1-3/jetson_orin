@@ -1,0 +1,25 @@
+# 맥(또는 리눅스)의 ~/.ssh/config 에 붙여넣고 <> 부분만 바꾸세요.
+#   HostName: Jetson 의 Tailscale MagicDNS 이름 (맥에서 `tailscale status` 로 확인)
+#   이후 `ssh jetson` 한 줄로 접속, VS Code Remote-SSH 에서도 "jetson" 으로 선택 가능
+
+Host jetson
+  # 예: jetson-orin 또는 jetson-orin.tail1234.ts.net (ssh_config 는 줄 끝 주석을 지원하지 않음)
+  HostName <jetson-orin>
+  User <리눅스아이디>
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
+
+  # 와이파이 전환/절전 후에도 끊김을 빨리 감지
+  ServerAliveInterval 30
+  ServerAliveCountMax 4
+
+  # 연결 재사용: 두 번째 ssh/scp/git 부터는 즉시 연결 (VS Code 체감 속도 개선)
+  ControlMaster auto
+  ControlPath ~/.ssh/cm-%r@%h:%p
+  ControlPersist 10m
+
+  # Tailscale 이 이미 암호화하므로 압축은 끄는 편이 CPU/지연 면에서 유리
+  Compression no
+
+  # (선택) Jetson 에서 띄운 웹 서버를 맥 localhost 로 보고 싶을 때
+  # LocalForward 8888 localhost:8888

@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# 모델/데이터 (용량 큼 — 공유는 NAS/클라우드 또는 Jetson 공용 디렉터리로)
+*.pt
+*.pth
+*.onnx
+*.engine
+*.trt
+*.safetensors
+*.gguf
+data/
+datasets/
+models/
+runs/
+outputs/
+
+# 비밀/개인 설정
+.env
+.env.*
+.claude/settings.local.json
+
+# OS/에디터
+.DS_Store
+.vscode/
+.idea/
