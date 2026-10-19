@@ -9,7 +9,7 @@ setup() {
 }
 
 teardown() {
-  [[ -n ${HOLDER:-} ]] && kill "$HOLDER" 2>/dev/null || true
+  if [[ -n ${HOLDER:-} ]]; then kill "$HOLDER" 2>/dev/null || true; fi
 }
 
 hold_lock() {
