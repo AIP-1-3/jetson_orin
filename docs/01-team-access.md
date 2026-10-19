@@ -31,9 +31,12 @@
    GitHub 계정에 SSH 공개키가 등록돼 있으면 자동으로 가져온다. 없으면 `--key-file 공개키.pub`.
 6. **모든 팀원 키 등록을 확인한 뒤** 비밀번호 SSH 차단:
    ```bash
-   sudo ./scripts/secure-ssh.sh
+   sudo ./scripts/secure-ssh.sh --dry-run   # 바뀔 내용 미리 보기
+   sudo ./scripts/secure-ssh.sh             # 적용 + 10분 자동 되돌리기 예약
    ```
-   적용 후 **기존 창을 닫지 말고** 새 터미널에서 접속 테스트.
+   적용 후 **기존 창을 닫지 말고** 새 터미널에서 `ssh jetson` 으로 접속 테스트.
+   - 접속 성공 → `sudo ./scripts/secure-ssh.sh --keep` (자동 되돌리기 취소, 설정 유지)
+   - 접속 실패 → 기존 창에서 `sudo ./scripts/secure-ssh.sh --rollback`, 또는 10분 기다리면 자동으로 원래대로
 
 ## 3. 팀원 작업
 

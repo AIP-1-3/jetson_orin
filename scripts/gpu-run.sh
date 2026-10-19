@@ -13,7 +13,7 @@
 #   ./scripts/gpu-run.sh --wait-max 600 -- trtexec --onnx=model.onnx --saveEngine=model.engine
 set -euo pipefail
 
-LOCK=/tmp/jetson-gpu.lock
+LOCK=${GPU_RUN_LOCK:-/tmp/jetson-gpu.lock}  # 테스트에서만 바꾼다
 WAIT_MAX=""
 
 usage() { sed -n '2,/^set -euo/p' "$0" | sed '$d; s/^# \{0,1\}//'; exit "${1:-0}"; }
