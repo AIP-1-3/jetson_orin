@@ -147,7 +147,7 @@ EOF
 # 3) 스왑 파일: SD카드/eMMC 에 만들면 수명을 깎으므로 NVMe 일 때만 기본 진행
 # ---------------------------------------------------------------------------
 setup_swap() {
-  local swapfile=/swapfile bytes avail dev
+  local swapfile=${SWAPFILE:-/swapfile} bytes avail dev
   [[ $SWAP_SIZE == 0 ]] && { log "스왑 파일 건너뜀 (--swap-size 0)"; return; }
 
   if swapon --show=NAME --noheadings | grep -qx "$swapfile"; then

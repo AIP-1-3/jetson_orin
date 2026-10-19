@@ -9,12 +9,13 @@ setup() {
 }
 
 teardown() {
-  if [[ -n ${HOLDER:-} ]]; then kill "$HOLDER" 2>/dev/null || true; fi
+  # flock 이 띄운 sleep 까지 정리해야 락이 풀리고 bats 가 기다리지 않는다
+  if [[ -n ${HOLDER:-} ]]; then pkill -P "$HOLDER" 2>/dev/null || true; kill "$HOLDER" 2>/dev/null || true; fi
 }
 
 hold_lock() {
   : >"$GPU_RUN_LOCK"
-  flock "$GPU_RUN_LOCK" sleep 30 &
+  flock "$GPU_RUN_LOCK" sleep 30 >/dev/null 2>&1 3>&- &
   HOLDER=$!
   # 락이 실제로 잡힐 때까지 기다린다
   for _ in $(seq 50); do flock -n "$GPU_RUN_LOCK" true || return 0; sleep 0.1; done

@@ -10,6 +10,8 @@ setup() {
   export NV_TEGRA_RELEASE=$BATS_TEST_TMPDIR/nv_tegra_release
   export NVPMODEL_CONF=$BATS_TEST_TMPDIR/nvpmodel.conf
   export DOCKER_DAEMON_JSON=$BATS_TEST_TMPDIR/docker/daemon.json
+  # 테스트 머신에 진짜 /swapfile 이 있어도 흔들리지 않게
+  export SWAPFILE=$BATS_TEST_TMPDIR/swapfile
   echo '# R36 (release), REVISION: 4.3, GCID: 0, BOARD: generic, EABI: aarch64' >"$NV_TEGRA_RELEASE"
   cat >"$NVPMODEL_CONF" <<'CONF'
 < POWER_MODEL ID=0 NAME=MAXN >
