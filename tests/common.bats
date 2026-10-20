@@ -82,3 +82,18 @@ setup() { common_setup; }
   run in_common "DRY_RUN=1; rollback_note a b; print_rollback_notes '$log'"
   [ ! -e "$log" ]
 }
+
+@test "print_rollback_notes: 로그 디렉터리가 없으면 만들어서 남긴다" {
+  log=$BATS_TEST_TMPDIR/state/rollback.log
+  run in_common "rollback_note a b; print_rollback_notes '$log'"
+  [ "$status" -eq 0 ]
+  grep -q '^- a' "$log"
+}
+
+@test "print_rollback_notes: 로그를 못 남겨도 오류를 내지 않는다" {
+  : >"$BATS_TEST_TMPDIR/not-a-dir"
+  log=$BATS_TEST_TMPDIR/not-a-dir/rollback.log
+  run in_common "rollback_note a b; print_rollback_notes '$log'"
+  [ "$status" -eq 0 ]
+  [[ $output != *"No such file"* && $output != *"Not a directory"* ]]
+}
