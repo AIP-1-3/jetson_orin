@@ -1,0 +1,30 @@
+name: collector
+
+# 과제 1 수집기: 단위 시험 + 실제 MQTT 브로커(amqtt)로 장애 시험
+on:
+  push:
+    paths:
+      - 'collector/**'
+      - '.github/workflows/collector.yml'
+  pull_request:
+    paths:
+      - 'collector/**'
+      - '.github/workflows/collector.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: collector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'   # Jetson (JetPack 7.2.1) 과 같은 버전
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: python -m pytest -q

@@ -1,0 +1,23 @@
+# MQTT → InfluxDB 수집기 (과제 1). 재부팅·비정상 종료 뒤 자동으로 다시 시작한다.
+# 설치 방법: collector/README.md 의 "상시 가동" 참고 (sudo 필요 — 팀 합의 후 관리자가 등록)
+[Unit]
+Description=MQTT to InfluxDB time-series collector
+Wants=network-online.target
+After=network-online.target
+# 계속 실패해도 재시작을 포기하지 않는다
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=ts-collector
+WorkingDirectory=/opt/ts-collector
+EnvironmentFile=-/etc/ts-collector/env
+ExecStart=/opt/ts-collector/.venv/bin/python -m ts_collector.collector -c /etc/ts-collector/config.yaml
+Restart=always
+RestartSec=5
+StateDirectory=ts-collector
+MemoryMax=300M
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

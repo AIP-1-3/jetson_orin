@@ -45,6 +45,7 @@ jtop                              # 대화형 모니터 (q 로 종료)
 
 ## 저장소 구조
 
+- `collector/` — 과제 1 MQTT → InfluxDB 상시 수집기 (`collector/README.md`)
 - `scripts/` — 장비 세팅/운영 스크립트 (sudo 필요 여부는 각 파일 상단 주석 참고)
 - `config/` — 팀 공용 tmux, SSH 설정 예시
 - `tailscale/` — Tailscale 접근 정책 예시

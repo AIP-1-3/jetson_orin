@@ -1,0 +1,64 @@
+# 수집기 설정 예시. 복사해서 쓴다: cp config.example.yaml /etc/ts-collector/config.yaml
+# 비밀값은 여기 쓰지 않고 환경 변수로 넘긴다 (*_env 에 변수 이름). systemd 에서는 /etc/ts-collector/env.
+
+mqtt:
+  host: data.withio.net
+  port: 1883
+  username_env: MQTT_USERNAME      # 인증이 없으면 두 줄 지워도 된다
+  password_env: MQTT_PASSWORD
+  client_id: ts-collector-jetson   # 고정 id + clean_session false → 수집기 재시작 중 메시지를 브로커가 보관
+  clean_session: false
+  qos: 1
+  keepalive: 30
+  max_reconnect_delay_s: 15        # 브로커 재시작 후 15초 안에 다시 붙는다 (확인 기준: 1분)
+
+influx:                            # InfluxDB 2.x 기준. 1.8 이면 org: "-", bucket: "db/autogen", token: "user:pass"
+  url: http://data.withio.net:8086
+  org: aip
+  bucket: sensors
+  token_env: INFLUX_TOKEN
+  measurement: env                 # 센서 값: 태그 space, metric, sensor, ts_source / 필드 value, recv_lag_s
+  status_measurement: collector_status   # 수집기 상태(1분마다): 결측 원인 추정에 쓴다
+  flush_interval_s: 2
+
+spool:                             # InfluxDB 에 못 쓰면 여기 모았다가 복구되면 다시 쓴다
+  path: /var/lib/ts-collector/spool.lp
+  max_mb: 200
+
+time:
+  max_future_skew_s: 120           # 센서 시각이 받은 시각보다 2분 넘게 미래면 센서 시계가 틀린 것으로 보고 받은 시각을 쓴다
+
+heartbeat_interval_s: 60
+dedup_window: 50000                # 재전송 판별에 기억할 최근 점 개수
+
+aliases:                           # 이름 통일 (센서마다 이름이 달라도 저장은 한 이름으로)
+  space:
+    lecture1: classroom_a
+    lecture2: classroom_b
+    meeting: meeting_room
+  metric:
+    CO2: co2
+    temp: temperature
+    hum: humidity
+
+# 메시지 형식. 위에서부터 처음 맞는 항목 하나로 해석한다.
+# 실제 브로커의 토픽·메시지 형식을 확인한 뒤 이 부분만 고치면 된다 (코드 수정 불필요).
+sources:
+  # 예 1) 한 메시지에 여러 항목: topic=sensors/lecture1/env, {"device":"s01","ts":1760918400,"co2":612,"temp":23.4,"hum":41}
+  - name: env-json
+    topic: sensors/+/env
+    format: json
+    space: "{topic.1}"
+    sensor: $.device
+    timestamp: {path: $.ts, unit: s}     # unit: s | ms | us | ns | iso
+    metrics:
+      co2: {path: $.co2}
+      temperature: {path: $.temp}
+      humidity: {path: $.hum}
+
+  # 예 2) 항목마다 토픽 하나, 본문은 숫자만: topic=building/meeting/CO2 , payload "640"
+  - name: single-value
+    topic: building/+/+
+    format: raw
+    space: "{topic.1}"
+    metric: "{topic.2}"
