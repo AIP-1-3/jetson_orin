@@ -102,3 +102,17 @@ def test_invalid_config_rejected():
         Mapper({"sources": []})
     with pytest.raises(ValueError):
         Mapper({"sources": [{"name": "r", "topic": "x", "format": "raw", "space": "a"}]})
+
+
+def test_wildcard_key_for_device_named_objects():
+    """xflow 냉난방 상태처럼 값이 기기 이름 키 아래 있을 때."""
+    cfg = {"sources": [{"name": "idu", "topic": "xflow/hvacr/idu/+/status", "space": "$.values.@key",
+                        "sensor": "{topic.3}", "timestamp": {"path": "$.ts", "unit": "ms"},
+                        "metrics": {"hvac_temperature": {"path": "$.values.*.current_temperature"},
+                                    "hvac_power": {"path": "$.values.*.power"}}}]}
+    body = {"ts": 1792459429395, "values": {"대표실-실내기": {"current_temperature": 20.7, "power": False}}}
+    recs = Mapper(cfg).parse("xflow/hvacr/idu/4a84/status", json.dumps(body, ensure_ascii=False).encode(),
+                             1792459430.0)
+    by = {r.metric: r for r in recs}
+    assert by["hvac_temperature"].space == "대표실-실내기" and by["hvac_temperature"].value == 20.7
+    assert by["hvac_power"].value == 0.0 and by["hvac_power"].ts == 1792459429.395

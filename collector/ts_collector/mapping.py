@@ -6,6 +6,8 @@
 값을 꺼내는 표현식 (space, sensor, metric, timestamp.path, metrics.*.path 공통):
   "{topic.1}"     토픽을 '/' 로 나눈 1번째 조각 (0부터)
   "$.a.b.0.c"     JSON 본문의 경로 (숫자는 리스트 인덱스)
+  "$.values.*.t"  * 는 객체의 첫 번째 값 (키 이름이 기기마다 다를 때)
+  "$.values.@key" @key 는 객체의 첫 번째 키 이름 (예: {"values":{"대표실-실내기":{...}}} → "대표실-실내기")
   "lecture-1"     그 외는 고정 문자열
   "{topic.1}-{topic.2}" 처럼 섞어 쓸 수 있다 (JSON 경로는 단독으로만)
 """
@@ -53,6 +55,12 @@ def topic_matches(pattern: str, topic: str) -> bool:
 def _json_path(body: Any, path: str) -> Any:
     cur = body
     for key in path[2:].split(".") if path != "$" else []:
+        if key in ("*", "@key"):
+            if not isinstance(cur, dict) or not cur:
+                return None
+            first = next(iter(cur))
+            cur = first if key == "@key" else cur[first]
+            continue
         if isinstance(cur, list):
             try:
                 cur = cur[int(key)]
