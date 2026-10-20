@@ -1,0 +1,4 @@
+source-path=SCRIPTDIR
+external-sources=true
+# stub 본문은 일부러 작은따옴표로 넘겨 가짜 명령 안에서 펼쳐지게 한다
+disable=SC2016

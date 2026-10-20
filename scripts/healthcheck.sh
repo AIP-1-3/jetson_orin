@@ -73,4 +73,9 @@ fi
 
 section "서비스"
 for s in ssh tailscaled jetson-maxclocks earlyoom jtop xrdp docker nvzramconfig; do svc "$s"; done
+section "꺼짐 방지 (절전 차단 여부 — masked 면 차단됨)"
+for t in sleep.target suspend.target hibernate.target hybrid-sleep.target; do
+  state=$(systemctl is-enabled "$t" 2>/dev/null) || true
+  printf '  %-26s %s\n' "$t" "${state:-unknown}"
+done
 echo

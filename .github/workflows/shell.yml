@@ -1,0 +1,41 @@
+name: shell
+
+# scripts/ 는 손으로 복구할 수 없는 원격 Jetson 에서 root 로 돈다.
+# 병합 전에 정적 분석(shellcheck)과 동작 테스트(bats, 장비 명령은 가짜로 대체)를 통과해야 한다.
+on:
+  push:
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - '.shellcheckrc'
+      - '.github/workflows/shell.yml'
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - '.shellcheckrc'
+      - '.github/workflows/shell.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: |
+          shellcheck --version
+          shellcheck scripts/*.sh scripts/lib/*.sh tests/*.bash tests/*.bats
+
+  bats:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install bats
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq bats
+      - name: bats
+        # 일반 사용자로 실행해야 테스트가 실수로 /etc 를 건드리지 못한다
+        run: bats --print-output-on-failure tests/
