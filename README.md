@@ -47,7 +47,7 @@ scripts/
 config/                    tmux, ssh_config 예시
 tailscale/                 ACL 정책 예시
 tests/                     bats 테스트 (stub 으로 장비 없이 실행)
-docs/                      01 접속 · 02 원격 데스크톱 · 03 성능 · 04 팀 작업 방식
+docs/                      01 접속 · 02 원격 데스크톱 · 03 성능 · 04 팀 작업 방식 · 06 AI 평가 대비
 CLAUDE.md                  Claude Code 가 읽는 장비/팀 규칙
 .claude/settings.json      재부팅·업그레이드 등 공용 장비 위험 명령 차단
 ```
