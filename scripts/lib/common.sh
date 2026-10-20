@@ -121,11 +121,13 @@ print_rollback_notes() {
   for n in "${ROLLBACK_NOTES[@]}"; do printf '  - %s\n' "$n"; done
   # SSH 출력은 창을 닫으면 사라지므로 장비에도 남긴다
   if [[ -n $log_file && $DRY_RUN != 1 ]]; then
+    # 로그 디렉터리를 만드는 스크립트(setup-performance.sh)를 먼저 돌리지 않았어도 남길 수 있게
+    mkdir -p "$(dirname "$log_file")" 2>/dev/null || true
     {
       printf '## %s %s (by %s)\n' "$(date '+%F %T')" "$(basename "$0")" "$(invoking_user)"
       for n in "${ROLLBACK_NOTES[@]}"; do printf -- '- %s\n' "$n"; done
       echo
-    } >>"$log_file" 2>/dev/null && log "같은 내용을 $log_file 에도 남겼습니다."
+    } 2>/dev/null >>"$log_file" && log "같은 내용을 $log_file 에도 남겼습니다."
   fi
   return 0
 }
