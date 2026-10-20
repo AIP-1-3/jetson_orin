@@ -32,6 +32,7 @@ flowchart LR
 2. SSH 공개키를 GitHub 에 등록하거나 관리자에게 전달
 3. `config/ssh_config.example` → `~/.ssh/config`, 그다음 `ssh jetson`
 4. Claude Code 설치 + 본인 계정 로그인 → [docs/04](docs/04-team-workflow.md)
+5. (선택) Jetson 을 Claude 프로젝트·앱에 연결해 원격으로 빌드·테스트 → [docs/05](docs/05-remote-control.md) · `./scripts/claude-rc.sh start`
 
 ## 구성
 

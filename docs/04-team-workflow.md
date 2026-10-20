@@ -19,6 +19,8 @@ claude --version
 claude doctor
 ```
 
+장비 앞에 없을 때도 Claude 프로젝트·앱에서 Jetson 작업을 시키려면 Remote Control 서버를 띄운다 → [05. Remote Control](05-remote-control.md)
+
 ## 3. 하루 작업 흐름
 
 ```bash
