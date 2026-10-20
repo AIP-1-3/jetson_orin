@@ -31,34 +31,63 @@ time:
 heartbeat_interval_s: 60
 dedup_window: 50000                # 재전송 판별에 기억할 최근 점 개수
 
-aliases:                           # 이름 통일 (센서마다 이름이 달라도 저장은 한 이름으로)
-  space:
-    lecture1: classroom_a
-    lecture2: classroom_b
-    meeting: meeting_room
-  metric:
-    CO2: co2
-    temp: temperature
-    hum: humidity
+aliases:                           # 이름 통일 (센서마다 이름이 달라도 저장은 한 이름으로). 필요하면 추가
+  space: {}
+  metric: {}
 
-# 메시지 형식. 위에서부터 처음 맞는 항목 하나로 해석한다.
-# 실제 브로커의 토픽·메시지 형식을 확인한 뒤 이 부분만 고치면 된다 (코드 수정 불필요).
+# 메시지 형식. 위에서부터 처음 맞는 항목 하나로 해석한다. 형식이 바뀌면 이 부분만 고친다 (코드 수정 불필요).
+# 2026-10-20 data.withio.net 브로커에서 확인한 실제 형식 기준.
 sources:
-  # 예 1) 한 메시지에 여러 항목: topic=sensors/lecture1/env, {"device":"s01","ts":1760918400,"co2":612,"temp":23.4,"hum":41}
-  - name: env-json
-    topic: sensors/+/env
+  # ChirpStack v4 업링크 (Milesight LoRaWAN 센서)
+  # topic: application/<앱ID>/device/<devEui>/event/up
+  # {"time":"2026-10-20T01:27:47.816+00:00",
+  #  "deviceInfo":{"deviceName":"AM107-067999","devEui":"24e124128c067999",
+  #                "tags":{"location":"실습실","spot":"후면 오른쪽"}},
+  #  "object":{"co2":980,"temperature":23.4,"humidity":60.5,"tvoc":266,"activity":0,...}}
+  # 기종마다 보내는 항목이 다르다: AM107 은 CO2 포함 전부, EM300-TH/EM320-TH 는 온습도(+배터리)만.
+  - name: chirpstack-uplink
+    topic: application/+/device/+/event/up
     format: json
-    space: "{topic.1}"
-    sensor: $.device
-    timestamp: {path: $.ts, unit: s}     # unit: s | ms | us | ns | iso
+    space: $.deviceInfo.tags.location
+    sensor: "{topic.3}"                  # devEui
+    timestamp: {path: $.time, unit: iso}
     metrics:
-      co2: {path: $.co2}
-      temperature: {path: $.temp}
-      humidity: {path: $.hum}
+      co2: {path: $.object.co2}
+      temperature: {path: $.object.temperature}
+      humidity: {path: $.object.humidity}
+      tvoc: {path: $.object.tvoc}
+      pressure: {path: $.object.pressure}
+      illumination: {path: $.object.illumination}
+      activity: {path: $.object.activity}       # AM107 PIR 움직임 → 과제 5 사용 여부 참고 신호
+      infrared: {path: $.object.infrared}
+      battery: {path: $.object.battery}
 
-  # 예 2) 항목마다 토픽 하나, 본문은 숫자만: topic=building/meeting/CO2 , payload "640"
-  - name: single-value
-    topic: building/+/+
-    format: raw
-    space: "{topic.1}"
-    metric: "{topic.2}"
+  # 냉난방 실내기 상태 (xflow)
+  # topic: xflow/hvacr/idu/<id>/status
+  # {"ts":1792459580627,"values":{"개발실-실내기":{"current_temperature":22.3,"power":false,...}}}
+  - name: hvac-indoor
+    topic: xflow/hvacr/idu/+/status
+    format: json
+    space: $.values.@key                 # "개발실-실내기" → aliases.space 로 공간 이름에 맞출 것
+    sensor: "{topic.3}"
+    timestamp: {path: $.ts, unit: ms}
+    metrics:
+      hvac_power: {path: $.values.*.power}          # true=1, false=0
+      hvac_mode: {path: $.values.*.mode}
+      hvac_fan_speed: {path: $.values.*.fan_speed}
+      hvac_target_temperature: {path: $.values.*.target_temperature}
+      hvac_current_temperature: {path: $.values.*.current_temperature}
+      hvac_current_humidity: {path: $.values.*.current_humidity}
+      hvac_error_code: {path: $.values.*.error_code}
+      hvac_online: {path: $.values.*.online}
+
+  # 냉난방 실외기 상태 (외기 온도)
+  - name: hvac-outdoor
+    topic: xflow/hvacr/odu/+/status
+    format: json
+    space: $.values.@key
+    sensor: "{topic.3}"
+    timestamp: {path: $.ts, unit: ms}
+    metrics:
+      outdoor_temperature: {path: $.values.*.outdoor_temperature}
+      odu_error_code: {path: $.values.*.error_code}

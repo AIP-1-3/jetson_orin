@@ -116,3 +116,42 @@ def test_wildcard_key_for_device_named_objects():
     by = {r.metric: r for r in recs}
     assert by["hvac_temperature"].space == "대표실-실내기" and by["hvac_temperature"].value == 20.7
     assert by["hvac_power"].value == 0.0 and by["hvac_power"].ts == 1792459429.395
+
+
+def test_example_config_parses_real_chirpstack_and_hvac_messages():
+    """2026-10-20 실제 브로커에서 받은 메시지 (rxInfo/txInfo 제외)."""
+    import os
+
+    import yaml
+
+    cfg = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), "..", "config.example.yaml"), encoding="utf-8"))
+    m = Mapper(cfg)
+    up = {"time": "2026-10-20T01:27:47.816+00:00",
+          "deviceInfo": {"deviceProfileName": "AM107", "deviceName": "AM107-067999", "devEui": "24e124128c067999",
+                         "tags": {"location": "실습실", "point": "후면 오른쪽", "spot": "후면 오른쪽"}},
+          "fCnt": 106257, "object": {"infrared_and_visible": 31, "temperature": 23.4, "humidity": 60.5,
+                                     "infrared": 5, "co2": 980, "pressure": 1002.8, "tvoc": 266,
+                                     "activity": 0, "illumination": 44}}
+    recs = m.parse("application/96b4d719-f23f-40aa-9f94-a0f2d0354342/device/24e124128c067999/event/up",
+                   json.dumps(up, ensure_ascii=False).encode(), 1792459670.0)
+    by = {r.metric: r for r in recs}
+    assert by["co2"].value == 980 and by["co2"].space == "실습실" and by["co2"].sensor == "24e124128c067999"
+    assert by["co2"].ts == pytest.approx(1792459667.816) and by["co2"].ts_source == "sensor"
+    assert set(by) == {"co2", "temperature", "humidity", "tvoc", "pressure", "illumination", "activity", "infrared"}
+
+    th = {"time": "2026-10-20T01:33:07.800+00:00", "deviceInfo": {"tags": {"location": "사무실"}},
+          "object": {"humidity": 59, "battery": 35, "temperature": 22.5}}
+    recs = m.parse("application/x/device/24e124785c389010/event/up", json.dumps(th).encode(), 1792459990.0)
+    assert {r.metric for r in recs} == {"humidity", "battery", "temperature"}
+
+    idu = {"ts": 1792459580627, "values": {"개발실-실내기": {
+        "current_humidity": 48, "current_temperature": 22.3, "error_code": 0, "fan_speed": 0, "mode": 0,
+        "online": True, "power": False, "target_temperature": 18}}}
+    recs = m.parse("xflow/hvacr/idu/54427240-8598-11f1-bcac-bdfb397bbe8a/status",
+                   json.dumps(idu, ensure_ascii=False).encode(), 1792459581.0)
+    by = {r.metric: r for r in recs}
+    assert by["hvac_power"].value == 0 and by["hvac_online"].value == 1
+    assert by["hvac_current_temperature"].space == "개발실-실내기"
+
+    with pytest.raises(SkipMessage):  # 게이트웨이 접속 상태(protobuf)는 수집 대상 아님
+        m.parse("gateway/24e124fffef5dccc/state/conn", b"\x1a\x1024e124fffef5dccc", 1792459581.0)
