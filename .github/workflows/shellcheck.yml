@@ -1,0 +1,28 @@
+# scripts/ 아래 셸 스크립트를 PR 마다 shellcheck 로 검사한다.
+# 설정은 저장소 루트의 .shellcheckrc (source-path=SCRIPTDIR) 를 따른다.
+name: shellcheck
+
+on:
+  pull_request:
+    paths:
+      - "scripts/**"
+      - ".shellcheckrc"
+      - ".github/workflows/shellcheck.yml"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - ".shellcheckrc"
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: |
+          shellcheck --version
+          find scripts -type f -name '*.sh' -print0 | xargs -0 shellcheck -x
